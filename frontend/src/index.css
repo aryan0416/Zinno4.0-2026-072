@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #050811;
+    color: #e2e8f0;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  /* Custom high-tech tactical scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #090e1a;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1e293b;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #06b6d4;
+  }
+}
+
+/* Ensure Leaflet Container fills its parent seamlessly */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  background: #090e17 !important;
+  font-family: inherit;
+  z-index: 10;
+}
+
+/* Leaflet dark popups */
+.leaflet-popup-content-wrapper {
+  background: #0f172a !important;
+  color: #f1f5f9 !important;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7);
+}
+
+.leaflet-popup-tip {
+  background: #0f172a !important;
+  border: 1px solid #334155;
+}
+
+/* Scanline visual overlay effect */
+.scanline-grid {
+  background-size: 100% 4px;
+  background-image: linear-gradient(
+    rgba(18, 16, 16, 0) 50%,
+    rgba(0, 0, 0, 0.35) 50%
+  );
+}
+
+/* Glowing text utilities */
+.glow-emerald {
+  text-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
+}
+
+.glow-crimson {
+  text-shadow: 0 0 14px rgba(239, 68, 68, 0.75);
+}
+
+.glow-cyan {
+  text-shadow: 0 0 12px rgba(6, 182, 212, 0.6);
+}
