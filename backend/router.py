@@ -270,3 +270,4 @@ class CityGraphRouter:
             "edges": edges_list,
             "incident_zone_blocked": self.is_incident_zone_blocked()
         }
+

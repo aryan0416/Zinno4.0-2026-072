@@ -411,3 +411,4 @@ class IncidentDetector:
         cv2.putText(frame, bottom_text, (12, h - 9), cv2.FONT_HERSHEY_SIMPLEX, 0.42, (180, 200, 210), 1)
 
         return frame
+

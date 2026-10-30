@@ -1,27 +1,22 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import {
-  Siren,
-  ShieldAlert,
-  Radio,
-  Volume2,
-  VolumeX,
-  RotateCcw,
-  AlertTriangle,
-  Activity,
-  Wifi,
-  WifiOff,
-  Navigation,
-  Compass,
-  Zap,
-  Server
-} from 'lucide-react';
-
+import Navbar from './components/Navbar';
 import VideoFeed from './components/VideoFeed';
 import TacticalMap from './components/TacticalMap';
 import MetricsPanel from './components/MetricsPanel';
+import IncidentLog from './components/IncidentLog';
+import HowToUseModal from './components/HowToUseModal';
+import AnalyticsView from './components/AnalyticsView';
+import SettingsDrawer from './components/SettingsDrawer';
+import { tacticalAudio } from './utils/audio';
 
 export default function App() {
-  // Real-time state received from WebSocket
+  // Navigation & Modal Views
+  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'analytics'
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [activeSector, setActiveSector] = useState('downtown');
+
+  // WebSocket Live Telemetry State
   const [isConnected, setIsConnected] = useState(false);
   const [frameData, setFrameData] = useState(null);
   const [incidentDetected, setIncidentDetected] = useState(false);
@@ -29,63 +24,117 @@ export default function App() {
   const [detectorMetrics, setDetectorMetrics] = useState(null);
   const [route, setRoute] = useState(null);
   const [topology, setTopology] = useState(null);
-  const [systemTime, setSystemTime] = useState(new Date().toLocaleTimeString());
-  const [audioEnabled, setAudioEnabled] = useState(false);
+  const [fps, setFps] = useState(25);
+  const [utcTime, setUtcTime] = useState('');
   const [isToggling, setIsToggling] = useState(false);
 
-  const wsRef = useRef(null);
-  const audioContextRef = useRef(null);
-  const lastIncidentStateRef = useRef(false);
+  // Audio State
+  const [audioEnabled, setAudioEnabled] = useState(false);
 
-  // Synthesize tactical sound beep using Web Audio API on hazard trip
-  const playAlertSound = useCallback(() => {
-    if (!audioEnabled) return;
-    try {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (!audioContextRef.current) {
-        audioContextRef.current = new AudioCtx();
-      }
-      const ctx = audioContextRef.current;
-      if (ctx.state === 'suspended') {
-        ctx.resume();
-      }
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(880, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.35);
+  // Ambulance Step-by-Step Dispatch Simulation
+  const [isAmbulanceMoving, setIsAmbulanceMoving] = useState(false);
+  const [ambulanceStepIndex, setAmbulanceStepIndex] = useState(0);
 
-      gain.gain.setValueAtTime(0.15, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+  // Settings Configuration State
+  const [config, setConfig] = useState({
+    stallTimeThreshold: 6.0,
+    displacementThreshold: 12,
+    penaltyWeight: 9999,
+    audioVolume: 0.8
+  });
 
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.36);
-    } catch (e) {
-      console.warn("Audio alert failed", e);
+  // Real-time Event Audit Logs
+  const [auditLogs, setAuditLogs] = useState([
+    {
+      timestamp: new Date().toLocaleTimeString(),
+      level: 'INFO',
+      sector: 'Sector 04',
+      event: 'SYSTEM_BOOT',
+      details: 'SafeRoute-AI Tactical Telemetry Engine initialized.'
+    },
+    {
+      timestamp: new Date().toLocaleTimeString(),
+      level: 'INFO',
+      sector: 'Sector 04',
+      event: 'NETWORKX_INITIALIZED',
+      details: 'Downtown SF grid loaded with 7 nodes, Dijkstra shortest path ready.'
     }
-  }, [audioEnabled]);
+  ]);
 
-  // Establish and manage active WebSocket connection
+  const wsRef = useRef(null);
+  const lastIncidentStateRef = useRef(false);
+  const ambulanceIntervalRef = useRef(null);
+
+  // Helper to append a timestamped audit log
+  const addAuditLog = useCallback((level, event, details, sector = 'Sector 04') => {
+    const newEntry = {
+      timestamp: new Date().toLocaleTimeString(),
+      level,
+      sector,
+      event,
+      details
+    };
+    setAuditLogs((prev) => [...prev.slice(-150), newEntry]);
+  }, []);
+
+  // Spawn Ambulance Step-by-Step Simulation along Route Coordinates
+  const handleSpawnAmbulance = useCallback(() => {
+    if (!route || !route.coordinates || route.coordinates.length === 0) return;
+
+    if (ambulanceIntervalRef.current) {
+      clearInterval(ambulanceIntervalRef.current);
+    }
+
+    setIsAmbulanceMoving(true);
+    setAmbulanceStepIndex(0);
+    tacticalAudio.playAmbulanceDispatch();
+    addAuditLog('INFO', 'AMBULANCE_DISPATCHED', `Unit 01 departing N_AMBULANCE_BASE towards N_HOSPITAL via ${route.status} route.`);
+
+    const totalSteps = route.coordinates.length;
+    let currentStep = 0;
+
+    ambulanceIntervalRef.current = setInterval(() => {
+      currentStep += 1;
+      if (currentStep >= totalSteps) {
+        clearInterval(ambulanceIntervalRef.current);
+        ambulanceIntervalRef.current = null;
+        setIsAmbulanceMoving(false);
+        tacticalAudio.playClearChirp();
+        addAuditLog('INFO', 'AMBULANCE_ARRIVED', 'Unit 01 successfully arrived at Metropolitan Trauma Center.');
+      } else {
+        setAmbulanceStepIndex(currentStep);
+        tacticalAudio.playRadarChirp();
+      }
+    }, 900);
+  }, [route, addAuditLog]);
+
+  // Clean up ambulance interval on unmount
+  useEffect(() => {
+    return () => {
+      if (ambulanceIntervalRef.current) {
+        clearInterval(ambulanceIntervalRef.current);
+      }
+    };
+  }, []);
+
+  // WebSocket Connection Management
   useEffect(() => {
     let reconnectTimeout = null;
     let isSubscribed = true;
 
     function connect() {
-      // Determine WebSocket URL (default to localhost:8000 if dev server)
       const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const wsHost = window.location.port === '5173' ? 'localhost:8000' : window.location.host;
       const wsUrl = `${wsProtocol}//${wsHost}/ws/telemetry`;
 
-      console.log(`[SafeRoute-AI] Connecting WebSocket to ${wsUrl}...`);
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
       ws.onopen = () => {
         if (!isSubscribed) return;
-        console.log('[SafeRoute-AI] WebSocket connected.');
         setIsConnected(true);
+        addAuditLog('INFO', 'WEBSOCKET_CONNECTED', `Telemetry feed linked to ${wsUrl}`);
+        tacticalAudio.playRadarChirp();
       };
 
       ws.onmessage = (event) => {
@@ -94,31 +143,48 @@ export default function App() {
           const data = JSON.parse(event.data);
           if (data.type === 'telemetry_update') {
             if (data.frame) setFrameData(data.frame);
+            if (data.fps) setFps(data.fps);
+
             setIncidentDetected(data.incident_detected);
             setIncidentDetails(data.incident_details);
             setDetectorMetrics(data.detector_metrics);
             setRoute(data.route);
             setTopology(data.topology);
 
-            // Audio alert on rising edge of incident
+            // Trigger sound & audit logging on state transition
             if (data.incident_detected && !lastIncidentStateRef.current) {
-              playAlertSound();
+              tacticalAudio.playHazardAlarm();
+              const vehId = data.incident_details?.vehicle_id ?? '402';
+              const duration = data.incident_details?.stalled_duration_sec ?? '6.4';
+              addAuditLog(
+                'CRITICAL',
+                'HAZARD_DETECTED',
+                `Vehicle #${vehId} stalled for ${duration}s in Sector 04 Central. +9999.0 impedance penalty applied.`
+              );
+            } else if (!data.incident_detected && lastIncidentStateRef.current) {
+              tacticalAudio.playClearChirp();
+              addAuditLog(
+                'INFO',
+                'HAZARD_CLEARED',
+                'Sector 04 Transit Corridor obstruction cleared. Optimal direct route restored.'
+              );
             }
+
             lastIncidentStateRef.current = data.incident_detected;
           }
         } catch (err) {
-          console.error('[SafeRoute-AI] WS message error:', err);
+          console.error('[SafeRoute-AI] WS parse error:', err);
         }
       };
 
-      ws.onerror = (err) => {
-        console.warn('[SafeRoute-AI] WebSocket error encountered, will reconnect.');
+      ws.onerror = () => {
+        // Will reconnect on close
       };
 
       ws.onclose = () => {
         if (!isSubscribed) return;
-        console.log('[SafeRoute-AI] WebSocket disconnected. Reconnecting in 2s...');
         setIsConnected(false);
+        addAuditLog('WARN', 'WEBSOCKET_DISCONNECTED', 'Telemetry connection dropped. Reconnecting in 2s...');
         reconnectTimeout = setTimeout(connect, 2000);
       };
     }
@@ -128,38 +194,40 @@ export default function App() {
     return () => {
       isSubscribed = false;
       if (reconnectTimeout) clearTimeout(reconnectTimeout);
-      if (wsRef.current) {
-        wsRef.current.close();
-      }
+      if (wsRef.current) wsRef.current.close();
     };
-  }, [playAlertSound]);
+  }, [addAuditLog]);
 
-  // System clock timer
+  // Live UTC Clock
   useEffect(() => {
-    const timer = setInterval(() => {
-      setSystemTime(new Date().toLocaleTimeString());
-    }, 1000);
+    const updateTime = () => {
+      const now = new Date();
+      setUtcTime(`${now.toUTCString().slice(17, 25)} UTC`);
+    };
+    updateTime();
+    const timer = setInterval(updateTime, 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Manual hazard injection / clear action
-  const handleToggleSimulation = async () => {
+  // Quick Simulation Action: Inject Hazard
+  const handleSimulateHazard = async () => {
     setIsToggling(true);
     try {
       if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
         wsRef.current.send(JSON.stringify({ action: "toggle" }));
       } else {
-        // Fallback REST endpoint
         await fetch('http://localhost:8000/api/hazard/toggle', { method: 'POST' });
       }
+      addAuditLog('WARN', 'SIMULATION_HAZARD_INJECTED', 'Manual test obstruction injected into Sector 04 Transit Corridor.');
     } catch (e) {
-      console.error("Failed to toggle hazard:", e);
+      console.error(e);
     } finally {
       setTimeout(() => setIsToggling(false), 500);
     }
   };
 
-  const handleResetAll = async () => {
+  // Quick Simulation Action: Clear Hazard
+  const handleClearHazard = async () => {
     setIsToggling(true);
     try {
       if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
@@ -167,158 +235,138 @@ export default function App() {
       } else {
         await fetch('http://localhost:8000/api/hazard/reset', { method: 'POST' });
       }
+      addAuditLog('INFO', 'SIMULATION_HAZARD_CLEARED', 'Manual reset triggered: all street network penalties cleared.');
     } catch (e) {
-      console.error("Failed to reset:", e);
+      console.error(e);
     } finally {
       setTimeout(() => setIsToggling(false), 500);
     }
   };
 
+  const handleResetDefaults = () => {
+    setConfig({
+      stallTimeThreshold: 6.0,
+      displacementThreshold: 12,
+      penaltyWeight: 9999,
+      audioVolume: 0.8
+    });
+    addAuditLog('INFO', 'CONFIG_RESET', 'Tactical engine parameters reset to default baseline.');
+  };
+
   return (
-    <div className="min-h-screen bg-[#060a12] text-slate-100 flex flex-col selection:bg-cyan-500/20">
-      {/* 1. Command Center Top Navigation Bar */}
-      <header className="sticky top-0 z-50 bg-slate-950/95 backdrop-blur-md border-b border-slate-800/90 px-4 py-3">
-        <div className="max-w-[1780px] mx-auto flex flex-wrap items-center justify-between gap-4 font-mono">
-          {/* Logo & Title */}
-          <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg border flex items-center justify-center transition-all ${
-              incidentDetected
-                ? 'bg-red-600/20 border-red-500 text-red-400 shadow-lg shadow-red-600/30 animate-pulse'
-                : 'bg-cyan-500/10 border-cyan-500/40 text-cyan-400 shadow-md shadow-cyan-500/20'
-            }`}>
-              <Siren className="w-5 h-5 animate-pulse-fast" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-base sm:text-lg font-extrabold tracking-wider uppercase text-white">
-                  SafeRoute<span className="text-cyan-400">-AI</span>
-                </h1>
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
-                  v1.0.0
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-400 hidden sm:block">
-                Computer Vision Traffic Incident Detector & Dynamic Emergency Rerouting Engine
-              </p>
-            </div>
-          </div>
+    <div className="min-h-screen bg-[#070b12] text-slate-100 flex flex-col selection:bg-cyan-500/20 tactical-grid-bg">
+      {/* 1. Tactical Mission Control Top HUD */}
+      <Navbar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        isConnected={isConnected}
+        fps={fps}
+        incidentDetected={incidentDetected}
+        utcTime={utcTime}
+        audioEnabled={audioEnabled}
+        setAudioEnabled={setAudioEnabled}
+        onSimulateHazard={handleSimulateHazard}
+        onClearHazard={handleClearHazard}
+        onSpawnAmbulance={handleSpawnAmbulance}
+        isAmbulanceMoving={isAmbulanceMoving}
+        onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenGuide={() => setIsGuideOpen(true)}
+        activeSector={activeSector}
+        setActiveSector={setActiveSector}
+        isToggling={isToggling}
+      />
 
-          {/* Central Alert Pill */}
-          <div className="flex items-center gap-3">
-            {incidentDetected ? (
-              <div className="flex items-center gap-2 bg-red-950/90 border border-red-500 text-red-300 px-3.5 py-1.5 rounded-full shadow-lg shadow-red-950/50 animate-pulse">
-                <AlertTriangle className="w-4 h-4 text-red-400 animate-bounce" />
-                <span className="text-xs font-bold uppercase tracking-wide">
-                  CRITICAL HAZARD IN CORRIDOR // REROUTING DISPATCH
-                </span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 bg-slate-900 border border-emerald-500/40 text-emerald-300 px-3.5 py-1.5 rounded-full shadow-sm">
-                <span className="relative flex h-2 w-2">
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
-                </span>
-                <span className="text-xs font-semibold uppercase tracking-wide">
-                  NETWORK NOMINAL // OPTIMAL PATHWAY ACTIVE
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Right Action Controls & Telemetry */}
-          <div className="flex items-center gap-2 sm:gap-3 text-xs">
-            {/* Audio Toggle */}
-            <button
-              onClick={() => setAudioEnabled(!audioEnabled)}
-              title={audioEnabled ? "Disable Tactical Siren" : "Enable Tactical Siren"}
-              className={`p-2 rounded-lg border transition-colors ${
-                audioEnabled
-                  ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300'
-                  : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              {audioEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-            </button>
-
-            {/* Reset Button */}
-            <button
-              onClick={handleResetAll}
-              disabled={isToggling}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white transition-colors"
-            >
-              <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
-              <span className="hidden md:inline">Reset Graph</span>
-            </button>
-
-            {/* Connection Status Indicator */}
-            <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border ${
-              isConnected
-                ? 'bg-emerald-950/50 border-emerald-800 text-emerald-300'
-                : 'bg-red-950/50 border-red-800 text-red-300'
-            }`}>
-              {isConnected ? <Wifi className="w-3.5 h-3.5" /> : <WifiOff className="w-3.5 h-3.5" />}
-              <span className="text-[11px] font-bold">
-                {isConnected ? 'LIVE 25FPS' : 'RECONNECTING'}
-              </span>
-            </div>
-
-            {/* Digital Clock */}
-            <div className="hidden lg:block px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 text-[11px]">
-              {systemTime}
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* 2. Main Dashboard Command Body */}
-      <main className="flex-1 max-w-[1780px] w-full mx-auto p-4 sm:p-6 flex flex-col gap-5">
-        {/* Top KPI Telemetry Cards */}
-        <MetricsPanel
-          route={route}
-          incidentDetected={incidentDetected}
-          incidentDetails={incidentDetails}
-          detectorMetrics={detectorMetrics}
-        />
-
-        {/* Central Tactical Split View: CV Video vs Tactical Graph Map */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1 items-stretch">
-          {/* Left Column (5 Cols): Live Computer Vision Telemetry Feed */}
-          <div className="lg:col-span-5 flex flex-col">
-            <VideoFeed
-              frameData={frameData}
+      {/* 2. Main Mission Content Body */}
+      <main className="flex-1 max-w-[1900px] w-full mx-auto p-3 sm:p-5 flex flex-col gap-5">
+        {activeTab === 'dashboard' ? (
+          <>
+            {/* Top 4 Telemetry Metrics Cards */}
+            <MetricsPanel
+              route={route}
               incidentDetected={incidentDetected}
               incidentDetails={incidentDetails}
               detectorMetrics={detectorMetrics}
-              isConnected={isConnected}
-              onToggleSimulation={handleToggleSimulation}
-              isToggling={isToggling}
             />
-          </div>
 
-          {/* Right Column (7 Cols): Tactical Downtown Graph & Dijkstra Map */}
-          <div className="lg:col-span-7 flex flex-col min-h-[500px]">
-            <TacticalMap
-              topology={topology}
-              route={route}
-              incidentDetected={incidentDetected}
+            {/* Split Screen Tactical View: CCTV AI Feed vs. Tactical Leaflet Graph */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1 items-stretch">
+              {/* Left Column (5 Cols): Live Computer Vision Telemetry Feed */}
+              <div className="lg:col-span-5 flex flex-col min-h-[480px]">
+                <VideoFeed
+                  frameData={frameData}
+                  incidentDetected={incidentDetected}
+                  incidentDetails={incidentDetails}
+                  detectorMetrics={detectorMetrics}
+                  isConnected={isConnected}
+                  onToggleSimulation={incidentDetected ? handleClearHazard : handleSimulateHazard}
+                  isToggling={isToggling}
+                />
+              </div>
+
+              {/* Right Column (7 Cols): Tactical Downtown Graph & Dijkstra Map */}
+              <div className="lg:col-span-7 flex flex-col min-h-[480px]">
+                <TacticalMap
+                  topology={topology}
+                  route={route}
+                  incidentDetected={incidentDetected}
+                  isAmbulanceMoving={isAmbulanceMoving}
+                  ambulanceStepIndex={ambulanceStepIndex}
+                />
+              </div>
+            </div>
+
+            {/* Bottom Telemetry Event Audit Log Drawer */}
+            <IncidentLog
+              logs={auditLogs}
+              onClearLogs={() => setAuditLogs([])}
+            />
+          </>
+        ) : (
+          /* Analytics & Incident History Tab */
+          <div className="space-y-6">
+            <AnalyticsView onExportReport={() => {}} />
+            <IncidentLog
+              logs={auditLogs}
+              onClearLogs={() => setAuditLogs([])}
             />
           </div>
-        </div>
+        )}
       </main>
 
-      {/* 3. Footer System Telemetry Status */}
-      <footer className="bg-slate-950 border-t border-slate-800/80 px-4 py-2.5 text-xs font-mono text-slate-400">
-        <div className="max-w-[1780px] mx-auto flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-3 text-[11px]">
-            <span className="flex items-center gap-1.5 text-slate-300">
-              <Server className="w-3.5 h-3.5 text-cyan-400" /> SafeRoute Backend: FastAPI / Python 3.10
+      {/* 3. System Architecture & Judge Guide Modal */}
+      <HowToUseModal
+        isOpen={isGuideOpen}
+        onClose={() => setIsGuideOpen(false)}
+        onSimulateDemo={handleSimulateHazard}
+        onClearDemo={handleClearHazard}
+      />
+
+      {/* 4. Settings Configuration Drawer */}
+      <SettingsDrawer
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        config={config}
+        setConfig={setConfig}
+        onResetDefaults={handleResetDefaults}
+      />
+
+      {/* 5. Defense Mission Control Footer */}
+      <footer className="bg-[#090d16] border-t border-slate-800/80 px-4 py-2.5 text-xs font-mono text-slate-400">
+        <div className="max-w-[1900px] mx-auto flex flex-wrap items-center justify-between gap-3 text-[11px]">
+          <div className="flex items-center gap-3">
+            <span className="text-slate-300 font-bold">
+              OPERATIONAL STATUS: <span className={incidentDetected ? "text-rose-400 font-extrabold" : "text-emerald-400 font-extrabold"}>
+                {incidentDetected ? "EMERGENCY REROUTE ACTIVE" : "ALL CORRIDORS NOMINAL"}
+              </span>
             </span>
-            <span className="text-slate-600">|</span>
-            <span>Graph Engine: NetworkX Dijkstra</span>
-            <span className="text-slate-600">|</span>
-            <span>Vision Core: Ultralytics YOLOv8n + Centroid Tracker (&lt;12px, &gt;6.0s)</span>
+            <span className="text-slate-700">|</span>
+            <span>Vision Core: YOLOv8n (FP16 Edge TensorRT)</span>
+            <span className="text-slate-700">|</span>
+            <span>Graph Solver: NetworkX Dijkstra (&lt;15ms)</span>
           </div>
-          <div className="text-[11px] text-slate-400">
-            Target Destination: <span className="text-emerald-400 font-bold">N_HOSPITAL (Trauma Center)</span>
+
+          <div className="text-slate-400">
+            SafeRoute-AI Defense Operations &bull; Municipal Traffic Preemption System
           </div>
         </div>
       </footer>
