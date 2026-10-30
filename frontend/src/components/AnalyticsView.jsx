@@ -16,12 +16,7 @@ import {
   TrendingDown,
   Clock,
   ShieldAlert,
-  Car,
-  FileSpreadsheet,
-  CheckCircle2,
-  Calendar,
-  Layers,
-  Zap
+  Car
 } from 'lucide-react';
 
 export default function AnalyticsView({ onExportReport }) {
@@ -48,7 +43,6 @@ export default function AnalyticsView({ onExportReport }) {
     { sector: 'Sector 5 (Waterfront)', staticGpsMin: 15.0, safeRouteMin: 3.9 }
   ];
 
-  // Historical Incident Records
   const incidentHistory = [
     {
       id: "INC-2026-904",
@@ -93,116 +87,116 @@ export default function AnalyticsView({ onExportReport }) {
   ];
 
   return (
-    <div className="space-y-6 font-mono">
-      {/* Top Header & Export Action */}
-      <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-[#0b101b]/95 border border-slate-800 backdrop-blur-md">
+    <div className="space-y-4 font-sans">
+      {/* Top Header */}
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-lg bg-tactical-base border border-tactical-border">
         <div>
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-cyan-400" />
+          <h2 className="text-sm font-semibold text-textmuted-primary flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-signal-telemetry" />
             Historical Analytics & Incident Operations Ledger
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-[11px] text-textmuted-tertiary mt-0.5">
             Comparative performance telemetry: SafeRoute-AI Green Wave vs. Legacy Static GPS Navigation
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
-          <select
-            value={selectedTimeframe}
-            onChange={(e) => setSelectedTimeframe(e.target.value)}
-            className="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-1.5 focus:outline-none cursor-pointer"
-          >
-            <option value="24h">Past 24 Hours</option>
-            <option value="7d">Past 7 Days</option>
-            <option value="30d">Past 30 Days</option>
-          </select>
-        </div>
+        <select
+          value={selectedTimeframe}
+          onChange={(e) => setSelectedTimeframe(e.target.value)}
+          className="bg-tactical-void border border-tactical-border text-textmuted-primary text-xs rounded px-2.5 py-1 focus:outline-none cursor-pointer font-mono"
+        >
+          <option value="24h">Past 24 Hours</option>
+          <option value="7d">Past 7 Days</option>
+          <option value="30d">Past 30 Days</option>
+        </select>
       </div>
 
       {/* KPI Overview Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl bg-[#0b101b]/90 border border-slate-800 shadow-xl">
-          <span className="text-slate-400 text-xs block uppercase">Avg Emergency Time Saved</span>
-          <span className="text-3xl font-extrabold text-emerald-400 glow-emerald mt-1 block">
-            8.4 min
-          </span>
-          <span className="text-[11px] text-slate-400 mt-1 block">
-            &mdash; 73% reduction in arterial transit delays
-          </span>
-        </div>
-
-        <div className="p-4 rounded-xl bg-[#0b101b]/90 border border-slate-800 shadow-xl">
-          <span className="text-slate-400 text-xs block uppercase">Autonomous Incident Trips</span>
-          <span className="text-3xl font-extrabold text-cyan-400 glow-cyan mt-1 block">
-            128
-          </span>
-          <span className="text-[11px] text-slate-400 mt-1 block">
-            &mdash; 100% verified zero-velocity detection
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="p-3.5 rounded-lg bg-tactical-base border border-tactical-border">
+          <span className="text-textmuted-tertiary text-[11px] block uppercase tracking-wider">Avg Time Saved</span>
+          <div className="mt-1 flex items-baseline gap-1">
+            <span className="text-2xl font-mono font-medium text-signal-green">8.4</span>
+            <span className="text-textmuted-tertiary font-mono text-xs">min</span>
+          </div>
+          <span className="text-[10px] text-textmuted-tertiary mt-1 block font-mono">
+            73% reduction in arterial transit delays
           </span>
         </div>
 
-        <div className="p-4 rounded-xl bg-[#0b101b]/90 border border-slate-800 shadow-xl">
-          <span className="text-slate-400 text-xs block uppercase">Signal Preemption Rate</span>
-          <span className="text-3xl font-extrabold text-slate-100 mt-1 block">
-            99.4%
-          </span>
-          <span className="text-[11px] text-slate-400 mt-1 block">
-            &mdash; NTCIP 1202 Green Wave Controller sync
+        <div className="p-3.5 rounded-lg bg-tactical-base border border-tactical-border">
+          <span className="text-textmuted-tertiary text-[11px] block uppercase tracking-wider">Autonomous Incidents</span>
+          <div className="mt-1 flex items-baseline gap-1">
+            <span className="text-2xl font-mono font-medium text-textmuted-primary">128</span>
+            <span className="text-textmuted-tertiary font-mono text-xs">trips</span>
+          </div>
+          <span className="text-[10px] text-textmuted-tertiary mt-1 block font-mono">
+            100% verified zero-velocity detection
           </span>
         </div>
 
-        <div className="p-4 rounded-xl bg-[#0b101b]/90 border border-slate-800 shadow-xl">
-          <span className="text-slate-400 text-xs block uppercase">Cumulative Delay Avoided</span>
-          <span className="text-3xl font-extrabold text-amber-400 glow-amber mt-1 block">
-            412.5 hrs
+        <div className="p-3.5 rounded-lg bg-tactical-base border border-tactical-border">
+          <span className="text-textmuted-tertiary text-[11px] block uppercase tracking-wider">Signal Preemption</span>
+          <div className="mt-1 flex items-baseline gap-1">
+            <span className="text-2xl font-mono font-medium text-textmuted-primary">99.4</span>
+            <span className="text-textmuted-tertiary font-mono text-xs">%</span>
+          </div>
+          <span className="text-[10px] text-textmuted-tertiary mt-1 block font-mono">
+            NTCIP 1202 Green Wave Controller sync
           </span>
-          <span className="text-[11px] text-slate-400 mt-1 block">
-            &mdash; Municipal ambulance & fire department fleet
+        </div>
+
+        <div className="p-3.5 rounded-lg bg-tactical-base border border-tactical-border">
+          <span className="text-textmuted-tertiary text-[11px] block uppercase tracking-wider">Cumulative Delay Avoided</span>
+          <div className="mt-1 flex items-baseline gap-1">
+            <span className="text-2xl font-mono font-medium text-signal-warn">412.5</span>
+            <span className="text-textmuted-tertiary font-mono text-xs">hrs</span>
+          </div>
+          <span className="text-[10px] text-textmuted-tertiary mt-1 block font-mono">
+            Municipal ambulance & emergency fleet
           </span>
         </div>
       </div>
 
-      {/* Recharts Visualizations Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Visualizations Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Chart 1: Congestion Density vs Time */}
-        <div className="p-4 rounded-xl bg-[#0b101b]/95 border border-slate-800 shadow-xl">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-cyan-400" />
-                Arterial Congestion Density vs. Time
-              </h3>
-              <p className="text-[11px] text-slate-400">
-                Peak hours density comparison (Static Municipal Routing vs. SafeRoute-AI Reroute)
-              </p>
-            </div>
+        <div className="p-3.5 rounded-lg bg-tactical-base border border-tactical-border">
+          <div className="mb-3">
+            <h3 className="text-xs font-semibold text-textmuted-primary flex items-center gap-1.5 uppercase tracking-wider">
+              <Clock className="w-3.5 h-3.5 text-textmuted-tertiary" />
+              Arterial Congestion Density vs. Time
+            </h3>
+            <p className="text-[10px] text-textmuted-tertiary">
+              Peak hours density benchmark (Static Municipal Routing vs. SafeRoute-AI Reroute)
+            </p>
           </div>
 
-          <div className="h-64 w-full">
+          <div className="h-60 w-full font-mono">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={congestionData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                <XAxis dataKey="hour" stroke="#64748b" fontSize={11} />
-                <YAxis stroke="#64748b" fontSize={11} unit="%" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#232833" />
+                <XAxis dataKey="hour" stroke="#5C6473" fontSize={10} />
+                <YAxis stroke="#5C6473" fontSize={10} unit="%" />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px' }}
+                  contentStyle={{ backgroundColor: '#161920', borderColor: '#232833', borderRadius: '4px', fontSize: '11px' }}
                 />
-                <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
+                <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '6px' }} />
                 <Line
                   type="monotone"
                   dataKey="staticGps"
-                  name="Legacy Static Routing"
-                  stroke="#f43f5e"
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
+                  name="Static GPS"
+                  stroke="#EF4444"
+                  strokeWidth={1.5}
+                  dot={{ r: 2 }}
                 />
                 <Line
                   type="monotone"
                   dataKey="safeRoute"
-                  name="SafeRoute-AI Dynamic Graph"
-                  stroke="#10b981"
-                  strokeWidth={3}
-                  dot={{ r: 4 }}
+                  name="SafeRoute-AI"
+                  stroke="#22C55E"
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -210,31 +204,29 @@ export default function AnalyticsView({ onExportReport }) {
         </div>
 
         {/* Chart 2: Transit Time Reduction Bar Chart */}
-        <div className="p-4 rounded-xl bg-[#0b101b]/95 border border-slate-800 shadow-xl">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
-                <TrendingDown className="w-4 h-4 text-emerald-400" />
-                Emergency Transit Time (Minutes to Trauma Center)
-              </h3>
-              <p className="text-[11px] text-slate-400">
-                Direct benchmark across 5 key municipal urban sectors
-              </p>
-            </div>
+        <div className="p-3.5 rounded-lg bg-tactical-base border border-tactical-border">
+          <div className="mb-3">
+            <h3 className="text-xs font-semibold text-textmuted-primary flex items-center gap-1.5 uppercase tracking-wider">
+              <TrendingDown className="w-3.5 h-3.5 text-textmuted-tertiary" />
+              Emergency Transit Time (Minutes to Hospital)
+            </h3>
+            <p className="text-[10px] text-textmuted-tertiary">
+              Direct transit time comparison across 5 urban sectors
+            </p>
           </div>
 
-          <div className="h-64 w-full">
+          <div className="h-60 w-full font-mono">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={transitComparisonData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                <XAxis dataKey="sector" stroke="#64748b" fontSize={10} />
-                <YAxis stroke="#64748b" fontSize={11} unit="m" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#232833" />
+                <XAxis dataKey="sector" stroke="#5C6473" fontSize={9} />
+                <YAxis stroke="#5C6473" fontSize={10} unit="m" />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px' }}
+                  contentStyle={{ backgroundColor: '#161920', borderColor: '#232833', borderRadius: '4px', fontSize: '11px' }}
                 />
-                <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
-                <Bar dataKey="staticGpsMin" name="Static GPS (Minutes)" fill="#f43f5e" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="safeRouteMin" name="SafeRoute-AI (Minutes)" fill="#10b981" radius={[4, 4, 0, 0]} />
+                <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '6px' }} />
+                <Bar dataKey="staticGpsMin" name="Static GPS (min)" fill="#EF4444" radius={[2, 2, 0, 0]} />
+                <Bar dataKey="safeRouteMin" name="SafeRoute-AI (min)" fill="#22C55E" radius={[2, 2, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -242,48 +234,48 @@ export default function AnalyticsView({ onExportReport }) {
       </div>
 
       {/* Historical Incident Audit Log Table */}
-      <div className="rounded-xl bg-[#0b101b]/95 border border-slate-800 overflow-hidden shadow-xl">
-        <div className="px-4 py-3 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
-          <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
-            <ShieldAlert className="w-4 h-4 text-amber-400" />
+      <div className="rounded-lg bg-tactical-base border border-tactical-border overflow-hidden">
+        <div className="px-3.5 py-2.5 bg-tactical-surface border-b border-tactical-border flex items-center justify-between">
+          <h3 className="text-xs font-semibold text-textmuted-primary flex items-center gap-1.5 uppercase tracking-wider">
+            <ShieldAlert className="w-3.5 h-3.5 text-textmuted-tertiary" />
             Verified Incident History Ledger
           </h3>
-          <span className="text-xs text-slate-400">All incidents resolved autonomously</span>
+          <span className="text-[10px] text-textmuted-tertiary font-mono">Autonomous Resolution Log</span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-950/80 text-slate-400 border-b border-slate-800 uppercase text-[10px]">
+        <div className="overflow-x-auto font-mono text-xs">
+          <table className="w-full text-left">
+            <thead className="bg-tactical-void text-textmuted-tertiary border-b border-tactical-border uppercase text-[10px]">
               <tr>
-                <th className="p-3">Incident ID</th>
-                <th className="p-3">Timestamp</th>
-                <th className="p-3">Corridor / Road</th>
-                <th className="p-3">Vehicle Class</th>
-                <th className="p-3">Severity</th>
-                <th className="p-3">Blockage Duration</th>
-                <th className="p-3">Time Saved</th>
+                <th className="p-2.5">ID</th>
+                <th className="p-2.5">Timestamp</th>
+                <th className="p-2.5">Corridor / Road</th>
+                <th className="p-2.5">Vehicle</th>
+                <th className="p-2.5">Severity</th>
+                <th className="p-2.5">Duration</th>
+                <th className="p-2.5">Time Saved</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className="divide-y divide-tactical-divider text-[11px]">
               {incidentHistory.map((item) => (
-                <tr key={item.id} className="hover:bg-slate-900/40 transition-colors">
-                  <td className="p-3 font-bold text-cyan-400">{item.id}</td>
-                  <td className="p-3 text-slate-400">{item.timestamp}</td>
-                  <td className="p-3 text-slate-200">{item.road}</td>
-                  <td className="p-3 text-slate-300">{item.vehicleClass}</td>
-                  <td className="p-3">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                <tr key={item.id} className="hover:bg-tactical-hover/40 transition-colors">
+                  <td className="p-2.5 text-signal-telemetry font-medium">{item.id}</td>
+                  <td className="p-2.5 text-textmuted-tertiary">{item.timestamp}</td>
+                  <td className="p-2.5 text-textmuted-primary">{item.road}</td>
+                  <td className="p-2.5 text-textmuted-secondary">{item.vehicleClass}</td>
+                  <td className="p-2.5">
+                    <span className={`px-1.5 py-0.2 rounded text-[9px] font-medium border ${
                       item.severity === 'CRITICAL'
-                        ? 'bg-rose-950 text-rose-300 border border-rose-800'
+                        ? 'bg-signal-alertBg text-signal-alert border-signal-alert/25'
                         : item.severity === 'HIGH'
-                        ? 'bg-amber-950 text-amber-300 border border-amber-800'
-                        : 'bg-cyan-950 text-cyan-300 border border-cyan-800'
+                        ? 'bg-signal-warnBg text-signal-warn border-signal-warn/25'
+                        : 'bg-signal-telemetryBg text-signal-telemetry border-signal-telemetry/20'
                     }`}>
                       {item.severity}
                     </span>
                   </td>
-                  <td className="p-3 text-slate-300">{item.duration}</td>
-                  <td className="p-3 text-emerald-400 font-bold">{item.minutesSaved}</td>
+                  <td className="p-2.5 text-textmuted-secondary">{item.duration}</td>
+                  <td className="p-2.5 text-signal-green font-medium">{item.minutesSaved}</td>
                 </tr>
               ))}
             </tbody>

@@ -4,106 +4,55 @@
 
 @layer base {
   body {
-    background-color: #070b12;
-    color: #e2e8f0;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: #090A0C;
+    color: #EDEDEE;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   }
 
-  /* Mission control cyber scrollbar */
+  /* Mission-critical tactical scrollbar */
   ::-webkit-scrollbar {
     width: 5px;
     height: 5px;
   }
   ::-webkit-scrollbar-track {
-    background: #090d16;
+    background: #090A0C;
   }
   ::-webkit-scrollbar-thumb {
-    background: #1e293b;
-    border-radius: 4px;
+    background: #232833;
+    border-radius: 2px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #06b6d4;
+    background: #38BDF8;
   }
 }
 
-/* Ensure Leaflet Container fills its parent seamlessly */
+/* Ensure Leaflet Container fills its parent cleanly */
 .leaflet-container {
   width: 100%;
   height: 100%;
-  background: #070b14 !important;
+  background: #090A0C !important;
   font-family: inherit;
   z-index: 10;
 }
 
-/* Tactical dark popups */
+/* Tactical dark popups - sharp 1px border with no heavy glow */
 .leaflet-popup-content-wrapper {
-  background: #0c121e !important;
-  color: #f1f5f9 !important;
-  border: 1px solid #1e293b;
-  border-radius: 8px;
-  box-shadow: 0 14px 35px -6px rgba(0, 0, 0, 0.85);
+  background: #161920 !important;
+  color: #EDEDEE !important;
+  border: 1px solid #232833;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
 }
 
 .leaflet-popup-tip {
-  background: #0c121e !important;
-  border: 1px solid #1e293b;
+  background: #161920 !important;
+  border: 1px solid #232833;
 }
 
-/* Mission Control HUD scanline background */
+/* Minimalist technical millimeter grid overlay */
 .tactical-grid-bg {
   background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-  background-size: 32px 32px;
-}
-
-/* Glowing text utilities */
-.glow-emerald {
-  text-shadow: 0 0 12px rgba(16, 185, 129, 0.7);
-}
-
-.glow-crimson {
-  text-shadow: 0 0 14px rgba(244, 63, 94, 0.8);
-}
-
-.glow-cyan {
-  text-shadow: 0 0 12px rgba(6, 182, 212, 0.7);
-}
-
-.glow-amber {
-  text-shadow: 0 0 12px rgba(245, 158, 11, 0.7);
-}
-
-/* Radar rotation */
-@keyframes radar-sweep {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.animate-radar {
-  animation: radar-sweep 4s linear infinite;
-}
-
-/* Vehicle Pulse Animation */
-@keyframes beacon-halo {
-  0% {
-    transform: scale(0.9);
-    opacity: 0.9;
-  }
-  70% {
-    transform: scale(2.2);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(2.2);
-    opacity: 0;
-  }
-}
-
-.animate-beacon-halo {
-  animation: beacon-halo 1.6s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+    linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: 24px 24px;
 }

@@ -50,14 +50,14 @@ export default function App() {
       level: 'INFO',
       sector: 'Sector 04',
       event: 'SYSTEM_BOOT',
-      details: 'SafeRoute-AI Tactical Telemetry Engine initialized.'
+      details: 'SafeRoute-AI Tactical Telemetry Console initialized.'
     },
     {
       timestamp: new Date().toLocaleTimeString(),
       level: 'INFO',
       sector: 'Sector 04',
       event: 'NETWORKX_INITIALIZED',
-      details: 'Downtown SF grid loaded with 7 nodes, Dijkstra shortest path ready.'
+      details: 'Downtown SF grid loaded with 7 nodes, Dijkstra shortest path solver online.'
     }
   ]);
 
@@ -88,7 +88,7 @@ export default function App() {
     setIsAmbulanceMoving(true);
     setAmbulanceStepIndex(0);
     tacticalAudio.playAmbulanceDispatch();
-    addAuditLog('INFO', 'AMBULANCE_DISPATCHED', `Unit 01 departing N_AMBULANCE_BASE towards N_HOSPITAL via ${route.status} route.`);
+    addAuditLog('INFO', 'AMBULANCE_DISPATCHED', `Unit 01 departing N_AMBULANCE_BASE towards N_HOSPITAL via ${route.status} corridor.`);
 
     const totalSteps = route.coordinates.length;
     let currentStep = 0;
@@ -100,7 +100,7 @@ export default function App() {
         ambulanceIntervalRef.current = null;
         setIsAmbulanceMoving(false);
         tacticalAudio.playClearChirp();
-        addAuditLog('INFO', 'AMBULANCE_ARRIVED', 'Unit 01 successfully arrived at Metropolitan Trauma Center.');
+        addAuditLog('INFO', 'AMBULANCE_ARRIVED', 'Unit 01 arrived at Metropolitan Trauma Center destination.');
       } else {
         setAmbulanceStepIndex(currentStep);
         tacticalAudio.playRadarChirp();
@@ -108,7 +108,6 @@ export default function App() {
     }, 900);
   }, [route, addAuditLog]);
 
-  // Clean up ambulance interval on unmount
   useEffect(() => {
     return () => {
       if (ambulanceIntervalRef.current) {
@@ -133,7 +132,7 @@ export default function App() {
       ws.onopen = () => {
         if (!isSubscribed) return;
         setIsConnected(true);
-        addAuditLog('INFO', 'WEBSOCKET_CONNECTED', `Telemetry feed linked to ${wsUrl}`);
+        addAuditLog('INFO', 'WEBSOCKET_CONNECTED', `Telemetry socket established on ${wsUrl}`);
         tacticalAudio.playRadarChirp();
       };
 
@@ -151,7 +150,6 @@ export default function App() {
             setRoute(data.route);
             setTopology(data.topology);
 
-            // Trigger sound & audit logging on state transition
             if (data.incident_detected && !lastIncidentStateRef.current) {
               tacticalAudio.playHazardAlarm();
               const vehId = data.incident_details?.vehicle_id ?? '402';
@@ -159,14 +157,14 @@ export default function App() {
               addAuditLog(
                 'CRITICAL',
                 'HAZARD_DETECTED',
-                `Vehicle #${vehId} stalled for ${duration}s in Sector 04 Central. +9999.0 impedance penalty applied.`
+                `Vehicle #${vehId} stalled for ${duration}s in Sector 04. +9999.0 impedance penalty applied.`
               );
             } else if (!data.incident_detected && lastIncidentStateRef.current) {
               tacticalAudio.playClearChirp();
               addAuditLog(
                 'INFO',
                 'HAZARD_CLEARED',
-                'Sector 04 Transit Corridor obstruction cleared. Optimal direct route restored.'
+                'Sector 04 corridor cleared. Direct optimal emergency pathway restored.'
               );
             }
 
@@ -177,14 +175,12 @@ export default function App() {
         }
       };
 
-      ws.onerror = () => {
-        // Will reconnect on close
-      };
+      ws.onerror = () => {};
 
       ws.onclose = () => {
         if (!isSubscribed) return;
         setIsConnected(false);
-        addAuditLog('WARN', 'WEBSOCKET_DISCONNECTED', 'Telemetry connection dropped. Reconnecting in 2s...');
+        addAuditLog('WARN', 'WEBSOCKET_DISCONNECTED', 'Telemetry socket dropped. Reconnecting in 2s...');
         reconnectTimeout = setTimeout(connect, 2000);
       };
     }
@@ -209,7 +205,6 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
-  // Quick Simulation Action: Inject Hazard
   const handleSimulateHazard = async () => {
     setIsToggling(true);
     try {
@@ -218,7 +213,7 @@ export default function App() {
       } else {
         await fetch('http://localhost:8000/api/hazard/toggle', { method: 'POST' });
       }
-      addAuditLog('WARN', 'SIMULATION_HAZARD_INJECTED', 'Manual test obstruction injected into Sector 04 Transit Corridor.');
+      addAuditLog('WARN', 'SIMULATION_HAZARD_INJECTED', 'Manual test obstruction injected into Sector 04 Central.');
     } catch (e) {
       console.error(e);
     } finally {
@@ -226,7 +221,6 @@ export default function App() {
     }
   };
 
-  // Quick Simulation Action: Clear Hazard
   const handleClearHazard = async () => {
     setIsToggling(true);
     try {
@@ -235,7 +229,7 @@ export default function App() {
       } else {
         await fetch('http://localhost:8000/api/hazard/reset', { method: 'POST' });
       }
-      addAuditLog('INFO', 'SIMULATION_HAZARD_CLEARED', 'Manual reset triggered: all street network penalties cleared.');
+      addAuditLog('INFO', 'SIMULATION_HAZARD_CLEARED', 'Manual reset triggered: corridor penalty cleared.');
     } catch (e) {
       console.error(e);
     } finally {
@@ -250,12 +244,12 @@ export default function App() {
       penaltyWeight: 9999,
       audioVolume: 0.8
     });
-    addAuditLog('INFO', 'CONFIG_RESET', 'Tactical engine parameters reset to default baseline.');
+    addAuditLog('INFO', 'CONFIG_RESET', 'Tactical engine parameters restored to default baseline.');
   };
 
   return (
-    <div className="min-h-screen bg-[#070b12] text-slate-100 flex flex-col selection:bg-cyan-500/20 tactical-grid-bg">
-      {/* 1. Tactical Mission Control Top HUD */}
+    <div className="min-h-screen bg-tactical-void text-textmuted-primary flex flex-col font-sans selection:bg-signal-telemetryBg tactical-grid-bg">
+      {/* 1. Tactical Top HUD */}
       <Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -276,8 +270,8 @@ export default function App() {
         isToggling={isToggling}
       />
 
-      {/* 2. Main Mission Content Body */}
-      <main className="flex-1 max-w-[1900px] w-full mx-auto p-3 sm:p-5 flex flex-col gap-5">
+      {/* 2. Main Content Body */}
+      <main className="flex-1 max-w-[1900px] w-full mx-auto p-3 sm:p-4 flex flex-col gap-3.5">
         {activeTab === 'dashboard' ? (
           <>
             {/* Top 4 Telemetry Metrics Cards */}
@@ -289,9 +283,9 @@ export default function App() {
             />
 
             {/* Split Screen Tactical View: CCTV AI Feed vs. Tactical Leaflet Graph */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1 items-stretch">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 flex-1 items-stretch">
               {/* Left Column (5 Cols): Live Computer Vision Telemetry Feed */}
-              <div className="lg:col-span-5 flex flex-col min-h-[480px]">
+              <div className="lg:col-span-5 flex flex-col min-h-[460px]">
                 <VideoFeed
                   frameData={frameData}
                   incidentDetected={incidentDetected}
@@ -304,7 +298,7 @@ export default function App() {
               </div>
 
               {/* Right Column (7 Cols): Tactical Downtown Graph & Dijkstra Map */}
-              <div className="lg:col-span-7 flex flex-col min-h-[480px]">
+              <div className="lg:col-span-7 flex flex-col min-h-[460px]">
                 <TacticalMap
                   topology={topology}
                   route={route}
@@ -323,7 +317,7 @@ export default function App() {
           </>
         ) : (
           /* Analytics & Incident History Tab */
-          <div className="space-y-6">
+          <div className="space-y-4">
             <AnalyticsView onExportReport={() => {}} />
             <IncidentLog
               logs={auditLogs}
@@ -351,22 +345,22 @@ export default function App() {
       />
 
       {/* 5. Defense Mission Control Footer */}
-      <footer className="bg-[#090d16] border-t border-slate-800/80 px-4 py-2.5 text-xs font-mono text-slate-400">
-        <div className="max-w-[1900px] mx-auto flex flex-wrap items-center justify-between gap-3 text-[11px]">
-          <div className="flex items-center gap-3">
-            <span className="text-slate-300 font-bold">
-              OPERATIONAL STATUS: <span className={incidentDetected ? "text-rose-400 font-extrabold" : "text-emerald-400 font-extrabold"}>
+      <footer className="bg-tactical-surface border-t border-tactical-border px-4 py-2 text-xs font-mono text-textmuted-tertiary">
+        <div className="max-w-[1900px] mx-auto flex flex-wrap items-center justify-between gap-2 text-[11px]">
+          <div className="flex items-center gap-2">
+            <span className="text-textmuted-secondary font-medium">
+              STATUS: <span className={incidentDetected ? "text-signal-alert" : "text-signal-green"}>
                 {incidentDetected ? "EMERGENCY REROUTE ACTIVE" : "ALL CORRIDORS NOMINAL"}
               </span>
             </span>
-            <span className="text-slate-700">|</span>
-            <span>Vision Core: YOLOv8n (FP16 Edge TensorRT)</span>
-            <span className="text-slate-700">|</span>
-            <span>Graph Solver: NetworkX Dijkstra (&lt;15ms)</span>
+            <span className="text-tactical-border">|</span>
+            <span>Vision Core: YOLOv8n Edge TensorRT</span>
+            <span className="text-tactical-border">|</span>
+            <span>Graph Engine: NetworkX Dijkstra (&lt;15ms)</span>
           </div>
 
-          <div className="text-slate-400">
-            SafeRoute-AI Defense Operations &bull; Municipal Traffic Preemption System
+          <div className="text-textmuted-tertiary">
+            SafeRoute-AI Tactical Console &bull; Municipal Traffic Preemption System
           </div>
         </div>
       </footer>

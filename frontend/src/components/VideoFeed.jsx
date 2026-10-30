@@ -13,8 +13,7 @@ import {
   EyeOff,
   Flame,
   Camera,
-  Maximize2,
-  Sparkles
+  Maximize2
 } from 'lucide-react';
 
 export default function VideoFeed({
@@ -33,7 +32,6 @@ export default function VideoFeed({
   const [showReticle, setShowReticle] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // Confidence estimation based on detection metrics
   const avgConfidence = detectorMetrics?.total_vehicles > 0 ? 94.8 : 98.2;
 
   const toggleFullscreen = () => {
@@ -41,52 +39,43 @@ export default function VideoFeed({
   };
 
   return (
-    <div className={`relative flex flex-col bg-[#0b101b]/95 rounded-xl border border-slate-800/80 overflow-hidden shadow-2xl backdrop-blur-md transition-all ${
+    <div className={`relative flex flex-col bg-tactical-base rounded-lg border border-tactical-border overflow-hidden transition-all ${
       isFullscreen ? 'fixed inset-4 z-[999]' : 'h-full'
     }`}>
       {/* 1. Tactical Camera Top HUD Header */}
-      <div className="flex flex-wrap items-center justify-between px-3.5 py-2.5 bg-slate-900/90 border-b border-slate-800 text-xs font-mono">
-        <div className="flex items-center gap-2.5">
-          <div className="relative flex h-3 w-3">
-            {isConnected ? (
-              <>
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
-              </>
-            ) : (
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-slate-600"></span>
-            )}
+      <div className="flex flex-wrap items-center justify-between px-3 py-2 bg-tactical-surface/90 border-b border-tactical-border text-xs font-mono">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            <span className={`h-1.5 w-1.5 rounded-full ${isConnected ? 'bg-signal-green' : 'bg-signal-alert'}`}></span>
+            <Camera className="w-3.5 h-3.5 text-textmuted-tertiary" />
           </div>
 
-          <div className="flex items-center gap-2">
-            <Camera className="w-3.5 h-3.5 text-cyan-400" />
-            <select
-              value={selectedCam}
-              onChange={(e) => setSelectedCam(e.target.value)}
-              className="bg-slate-950/80 border border-slate-700/80 text-cyan-300 font-bold rounded px-2 py-0.5 text-xs focus:outline-none cursor-pointer"
-            >
-              <option value="cam-04">CCTV-04 // SECTOR 4 INCIDENT ZONE</option>
-              <option value="cam-02">CCTV-02 // NORTH ARTERIAL INTERCHANGE</option>
-              <option value="cam-07">CCTV-07 // FINANCIAL CORRIDOR SOUTH</option>
-            </select>
-          </div>
+          <select
+            value={selectedCam}
+            onChange={(e) => setSelectedCam(e.target.value)}
+            className="bg-tactical-void border border-tactical-border text-textmuted-primary font-medium rounded px-2 py-0.5 text-xs focus:outline-none cursor-pointer"
+          >
+            <option value="cam-04">CCTV-04 // SECTOR 4 CENTRAL CORRIDOR</option>
+            <option value="cam-02">CCTV-02 // NORTH ARTERIAL INTERCHANGE</option>
+            <option value="cam-07">CCTV-07 // FINANCIAL CORRIDOR SOUTH</option>
+          </select>
         </div>
 
         {/* Inference Latency & Model Chip */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-cyan-950/60 border border-cyan-800 text-cyan-300 text-[10px] font-bold">
-            <Cpu className="w-3 h-3 text-cyan-400" />
-            <span>YOLOv8n: {detectorMetrics?.latency_ms ?? latencyMs}ms</span>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-tactical-void border border-tactical-border text-textmuted-secondary text-[10px] font-mono">
+            <Cpu className="w-3 h-3 text-textmuted-tertiary" />
+            <span>YOLOv8n: {detectorMetrics?.latency_ms ?? latencyMs}<span className="text-textmuted-tertiary">ms</span></span>
           </div>
 
-          <div className="hidden sm:flex items-center gap-1 px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 text-[10px]">
-            <span>CONF:</span>
-            <span className="text-emerald-400 font-bold">{avgConfidence}%</span>
+          <div className="hidden sm:flex items-center gap-1 px-2 py-0.5 rounded bg-tactical-void border border-tactical-border text-textmuted-secondary text-[10px] font-mono">
+            <span className="text-textmuted-tertiary">CONF:</span>
+            <span className="text-textmuted-primary font-medium">{avgConfidence}%</span>
           </div>
 
           <button
             onClick={toggleFullscreen}
-            className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
+            className="p-1 rounded hover:bg-tactical-hover text-textmuted-tertiary hover:text-textmuted-primary transition-colors"
             title="Toggle Expanded View"
           >
             <Maximize2 className="w-3.5 h-3.5" />
@@ -94,81 +83,76 @@ export default function VideoFeed({
         </div>
       </div>
 
-      {/* 2. Main Live Video Display Area with Tactical Reticle and Overlays */}
-      <div className="relative w-full flex-1 aspect-[4/3] sm:aspect-[16/10] bg-[#070b14] flex items-center justify-center overflow-hidden">
+      {/* 2. Main Live Video Display Area with Millimeter Reticle */}
+      <div className="relative w-full flex-1 aspect-[4/3] sm:aspect-[16/10] bg-tactical-void flex items-center justify-center overflow-hidden">
         {frameData ? (
           <div className="relative w-full h-full flex items-center justify-center">
             <img
               src={frameData}
               alt="Live Tactical Computer Vision Stream"
-              className={`w-full h-full object-contain select-none transition-opacity duration-300 ${
-                showBoxes ? 'opacity-100' : 'opacity-90 contrast-125'
+              className={`w-full h-full object-contain select-none transition-opacity ${
+                showBoxes ? 'opacity-100' : 'opacity-90 contrast-110'
               }`}
             />
 
-            {/* Optional Heatmap Congestion Density Simulation Mask */}
             {showHeatmap && (
-              <div className="absolute inset-0 pointer-events-none mix-blend-screen opacity-50 bg-gradient-to-r from-transparent via-amber-500/30 to-rose-600/40 animate-pulse" />
+              <div className="absolute inset-0 pointer-events-none mix-blend-screen opacity-40 bg-gradient-to-r from-transparent via-signal-warn/25 to-signal-alert/35" />
             )}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center p-8 text-center text-slate-500 font-mono">
-            <div className="relative w-16 h-16 mb-4 flex items-center justify-center">
-              <div className="absolute inset-0 rounded-full border-2 border-dashed border-cyan-500/40 animate-spin"></div>
-              <Radio className="w-8 h-8 text-cyan-400 animate-pulse" />
+          <div className="flex flex-col items-center justify-center p-8 text-center text-textmuted-tertiary font-mono">
+            <div className="relative w-12 h-12 mb-3 flex items-center justify-center">
+              <div className="absolute inset-0 rounded-full border border-dashed border-tactical-border animate-spin"></div>
+              <Radio className="w-6 h-6 text-textmuted-secondary" />
             </div>
-            <p className="text-sm font-semibold text-slate-300">ESTABLISHING EDGE CCTV TELEMETRY...</p>
-            <p className="text-xs text-slate-500 mt-1">Ingesting 25 FPS stream from Sector 4 Surveillance Unit</p>
+            <p className="text-xs font-medium text-textmuted-secondary uppercase">Awaiting Edge CCTV Telemetry...</p>
+            <p className="text-[10px] text-textmuted-tertiary mt-0.5">Ingesting RTSP frame stream from Sector 04 Unit</p>
           </div>
         )}
 
-        {/* Tactical Crosshair / Corner Bracket Overlays */}
+        {/* Technical Millimeter Reticle Overlay */}
         {showReticle && (
-          <div className="absolute inset-3 pointer-events-none border border-slate-700/25 rounded-lg">
-            {/* Top-Left Reticle */}
-            <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-cyan-400/80"></div>
-            {/* Top-Right Reticle */}
-            <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-cyan-400/80"></div>
-            {/* Bottom-Left Reticle */}
-            <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-cyan-400/80"></div>
-            {/* Bottom-Right Reticle */}
-            <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-cyan-400/80"></div>
+          <div className="absolute inset-3 pointer-events-none border border-tactical-border/40 rounded">
+            <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-textmuted-tertiary/70"></div>
+            <div className="absolute top-0 right-0 w-3 h-3 border-t border-r border-textmuted-tertiary/70"></div>
+            <div className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-textmuted-tertiary/70"></div>
+            <div className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-textmuted-tertiary/70"></div>
 
-            {/* Center Crosshair Pinpoint */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-30">
-              <div className="w-8 h-[1px] bg-cyan-400"></div>
-              <div className="h-8 w-[1px] bg-cyan-400 absolute"></div>
+            {/* Subdued Center Crosshair */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+              <div className="w-6 h-[1px] bg-textmuted-tertiary"></div>
+              <div className="h-6 w-[1px] bg-textmuted-tertiary absolute"></div>
             </div>
           </div>
         )}
 
         {/* Hazard Alert Banner Overlay */}
-        <div className="absolute top-3 left-3 right-3 pointer-events-none">
+        <div className="absolute top-2.5 left-2.5 right-2.5 pointer-events-none font-mono">
           {incidentDetected ? (
-            <div className="bg-rose-950/90 border border-rose-500 text-rose-200 px-3 py-2 rounded-lg backdrop-blur-md shadow-2xl shadow-rose-950/70 animate-pulse flex items-start justify-between gap-3 font-mono">
-              <div className="flex items-center gap-2.5">
-                <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0 animate-bounce" />
+            <div className="bg-signal-alertBg border border-signal-alert/30 text-signal-alert px-3 py-1.5 rounded backdrop-blur-md flex items-start justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-signal-alert shrink-0" />
                 <div>
-                  <p className="text-xs font-bold tracking-wide text-rose-300">
+                  <p className="font-medium text-signal-alert uppercase text-[11px]">
                     HAZARD CONFIRMED: VEHICLE #{incidentDetails?.vehicle_id ?? '402'} STALLED &gt; 6.0s
                   </p>
-                  <p className="text-[11px] text-rose-400">
-                    Zero-Velocity Window: <span className="text-white font-bold">{incidentDetails?.stalled_duration_sec ?? 7.4}s</span> &bull; Drift: <span className="text-white font-bold">{incidentDetails?.displacement_px ?? 3.8}px</span> (&lt;12px)
+                  <p className="text-[10px] text-textmuted-secondary">
+                    Stationary: <span className="text-textmuted-primary font-medium">{incidentDetails?.stalled_duration_sec ?? 7.4}s</span> &bull; Drift: <span className="text-textmuted-primary font-medium">{incidentDetails?.displacement_px ?? 3.8}px</span> (&lt;12px)
                   </p>
                 </div>
               </div>
-              <span className="hidden sm:inline-block px-2 py-0.5 rounded bg-rose-600 text-white text-[10px] font-bold uppercase shrink-0 shadow-md">
-                CORRIDOR BLOCKED
+              <span className="px-1.5 py-0.5 rounded bg-signal-alert text-tactical-void text-[9px] font-bold uppercase shrink-0">
+                BLOCKED
               </span>
             </div>
           ) : (
-            <div className="bg-slate-900/85 border border-emerald-500/50 text-emerald-300 px-3 py-1.5 rounded-lg backdrop-blur-md flex items-center justify-between gap-2 font-mono text-xs shadow-md">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span className="font-semibold">SURVEILLANCE ACTIVE: CORRIDOR TRAFFIC FLOWING NOMINALLY</span>
+            <div className="bg-tactical-surface/90 border border-signal-green/20 text-signal-green px-2.5 py-1 rounded backdrop-blur-md flex items-center justify-between gap-2 text-xs">
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5 text-signal-green" />
+                <span className="text-[11px] font-medium text-textmuted-secondary">SURVEILLANCE ACTIVE: CORRIDOR TRAFFIC FLOWING</span>
               </div>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800 font-bold hidden sm:inline">
-                ZERO HAZARDS
+              <span className="text-[9px] px-1.5 py-0.2 rounded bg-signal-greenBg text-signal-green border border-signal-green/20 font-medium">
+                NOMINAL
               </span>
             </div>
           )}
@@ -176,55 +160,54 @@ export default function VideoFeed({
       </div>
 
       {/* 3. Tactical Feed Control & Mask Toggle Bar */}
-      <div className="px-3.5 py-2 bg-slate-900/90 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+      <div className="px-3 py-1.5 bg-tactical-surface/90 border-t border-tactical-border flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
         <div className="flex items-center gap-2">
-          <span className="text-slate-400 text-[11px] uppercase">Overlays:</span>
+          <span className="text-textmuted-tertiary text-[10px] uppercase">Masks:</span>
           
           <button
             onClick={() => setShowBoxes(!showBoxes)}
-            className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold border transition-colors ${
+            className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium border transition-colors ${
               showBoxes
-                ? 'bg-cyan-500/20 border-cyan-500/60 text-cyan-300'
-                : 'bg-slate-800 border-slate-700 text-slate-400'
+                ? 'bg-tactical-base border-tactical-border text-textmuted-primary'
+                : 'bg-transparent border-transparent text-textmuted-tertiary hover:text-textmuted-secondary'
             }`}
           >
             {showBoxes ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-            <span>Bounding Boxes</span>
+            <span>Boxes</span>
           </button>
 
           <button
             onClick={() => setShowHeatmap(!showHeatmap)}
-            className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold border transition-colors ${
+            className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium border transition-colors ${
               showHeatmap
-                ? 'bg-amber-500/20 border-amber-500/60 text-amber-300'
-                : 'bg-slate-800 border-slate-700 text-slate-400'
+                ? 'bg-signal-warnBg border-signal-warn/30 text-signal-warn'
+                : 'bg-transparent border-transparent text-textmuted-tertiary hover:text-textmuted-secondary'
             }`}
           >
             <Flame className="w-3 h-3" />
-            <span>Heatmap Mask</span>
+            <span>Heatmap</span>
           </button>
 
           <button
             onClick={() => setShowReticle(!showReticle)}
-            className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold border transition-colors ${
+            className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium border transition-colors ${
               showReticle
-                ? 'bg-cyan-500/20 border-cyan-500/60 text-cyan-300'
-                : 'bg-slate-800 border-slate-700 text-slate-400'
+                ? 'bg-tactical-base border-tactical-border text-textmuted-primary'
+                : 'bg-transparent border-transparent text-textmuted-tertiary hover:text-textmuted-secondary'
             }`}
           >
             <Crosshair className="w-3 h-3" />
-            <span>Reticle HUD</span>
+            <span>Reticle</span>
           </button>
         </div>
 
-        {/* Quick Simulation Trigger inside feed */}
         <button
           onClick={onToggleSimulation}
           disabled={isToggling}
-          className={`px-3 py-1 rounded text-[11px] font-bold transition-all shadow-sm ${
+          className={`px-2.5 py-0.5 rounded text-[10px] font-mono font-medium transition-colors ${
             incidentDetected
-              ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
-              : 'bg-rose-600 hover:bg-rose-500 text-white'
+              ? 'bg-signal-greenBg hover:bg-signal-green/20 text-signal-green border border-signal-green/30'
+              : 'bg-signal-alertBg hover:bg-signal-alert/20 text-signal-alert border border-signal-alert/30'
           }`}
         >
           {incidentDetected ? 'Clear Obstruction' : 'Inject Stalled Vehicle'}
@@ -232,31 +215,31 @@ export default function VideoFeed({
       </div>
 
       {/* 4. Bottom Vehicle Detection Metrics Bar */}
-      <div className="p-3 bg-slate-950 border-t border-slate-800/80 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
-        <div className="bg-slate-900/80 p-2 rounded-lg border border-slate-800">
-          <span className="text-slate-400 text-[10px] uppercase block">Tracked Vehicles</span>
-          <span className="text-lg font-bold text-slate-100">
+      <div className="p-2.5 bg-tactical-void border-t border-tactical-border grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
+        <div className="bg-tactical-base p-1.5 rounded border border-tactical-border">
+          <span className="text-textmuted-tertiary text-[9px] uppercase block font-sans">Tracked</span>
+          <span className="text-sm font-medium text-textmuted-primary">
             {detectorMetrics?.total_vehicles ?? 4}
           </span>
         </div>
 
-        <div className="bg-slate-900/80 p-2 rounded-lg border border-slate-800">
-          <span className="text-slate-400 text-[10px] uppercase block">Moving Units</span>
-          <span className="text-lg font-bold text-cyan-400">
+        <div className="bg-tactical-base p-1.5 rounded border border-tactical-border">
+          <span className="text-textmuted-tertiary text-[9px] uppercase block font-sans">Moving Units</span>
+          <span className="text-sm font-medium text-signal-telemetry">
             {detectorMetrics?.moving_vehicles ?? (incidentDetected ? 3 : 4)}
           </span>
         </div>
 
-        <div className="bg-slate-900/80 p-2 rounded-lg border border-slate-800">
-          <span className="text-slate-400 text-[10px] uppercase block">Stalled Hazards</span>
-          <span className={`text-lg font-bold ${incidentDetected ? 'text-rose-400 glow-crimson' : 'text-emerald-400'}`}>
+        <div className="bg-tactical-base p-1.5 rounded border border-tactical-border">
+          <span className="text-textmuted-tertiary text-[9px] uppercase block font-sans">Stalled Hazards</span>
+          <span className={`text-sm font-medium ${incidentDetected ? 'text-signal-alert' : 'text-signal-green'}`}>
             {detectorMetrics?.stalled_vehicles ?? (incidentDetected ? 1 : 0)}
           </span>
         </div>
 
-        <div className="bg-slate-900/80 p-2 rounded-lg border border-slate-800">
-          <span className="text-slate-400 text-[10px] uppercase block">Avg Velocity</span>
-          <span className="text-lg font-bold text-slate-200">
+        <div className="bg-tactical-base p-1.5 rounded border border-tactical-border">
+          <span className="text-textmuted-tertiary text-[9px] uppercase block font-sans">Avg Velocity</span>
+          <span className="text-sm font-medium text-textmuted-secondary">
             {incidentDetected ? '14.2 px/s' : '36.8 px/s'}
           </span>
         </div>
